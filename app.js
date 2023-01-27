@@ -1,12 +1,13 @@
 import express from 'express'
 import cors from 'cors'
 import amqplib from 'amqplib'
+import fs from 'fs'
 
 const app = express()
 
 app.use(cors())
 ;(async () => {
-    const queue = 'images'
+    const queue = 'deleteImage'
     const connection = await amqplib.connect('amqp://guest:guest@rabbitmq:5672')
     const channel = await connection.createChannel()
 
@@ -21,8 +22,9 @@ app.use(cors())
     await channel.consume(
         queue,
         async (msg) => {
-            unlink(
-                `${process.env.PWD}/images/${msg.content.toString()}`,
+            const filename = msg.content.toString().split('/')
+            fs.unlink(
+                `${process.env.PWD}/images/${filename[filename.length - 1]}`,
                 (err) => {
                     if (err) throw err
                 }
@@ -30,7 +32,7 @@ app.use(cors())
             channel.ack(msg)
             console.log('Image removed successfully')
         },
-        { noAck: true }
+        { noAck: false }
     )
 })()
 app.use('/images', express.static('images'))
