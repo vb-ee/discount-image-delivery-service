@@ -29,10 +29,9 @@ app.use(cors())
                     if (err) throw err
                 }
             )
-            channel.ack(msg)
             console.log('Image removed successfully')
         },
-        { noAck: false }
+        { noAck: true }
     )
 })()
 app.use('/images', express.static('images'))
